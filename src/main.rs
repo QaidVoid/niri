@@ -36,6 +36,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         env::set_var("RUST_LIB_BACKTRACE", "0");
         REMOVE_ENV_RUST_LIB_BACKTRACE.store(true, Ordering::Relaxed);
     }
+    env::set_var("XDG_CURRENT_DESKTOP", "niri");
+    env::set_var("XDG_SESSION_TYPE", "wayland");
 
     let is_systemd_service = env::var_os("NOTIFY_SOCKET").is_some();
 
@@ -188,8 +190,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    let is_dbus_session = env::var_os("DBUS_SESSION_BUS_ADDRESS").is_some();
+
     #[cfg(feature = "dbus")]
-    dbus::DBusServers::start(&mut state, is_systemd_service);
+    dbus::DBusServers::start(&mut state, is_dbus_session);
 
     // Notify systemd we're ready.
     if let Err(err) = sd_notify::notify(true, &[NotifyState::Ready]) {
